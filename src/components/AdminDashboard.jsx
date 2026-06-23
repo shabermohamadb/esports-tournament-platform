@@ -10,7 +10,8 @@ export default function AdminDashboard() {
     isAdminLoggedIn, loginAdmin, logoutAdmin,
     homepageContent, updateHomepage,
     tournaments, addTournament, deleteTournament, updateTournament,
-    registrations, updateRegistrationStatus, deleteRegistration
+    registrations, updateRegistrationStatus, deleteRegistration,
+    adminPasscode, changeAdminPasscode
   } = useContext(AppContext);
 
   // Login Form
@@ -23,6 +24,37 @@ export default function AdminDashboard() {
   // Homepage Content Editor States
   const [editedHome, setEditedHome] = useState({ ...homepageContent });
   const [homeSaved, setHomeSaved] = useState(false);
+
+  // Passcode Changer States
+  const [currentCodeInput, setCurrentCodeInput] = useState('');
+  const [newCodeInput, setNewCodeInput] = useState('');
+  const [confirmNewCode, setConfirmNewCode] = useState('');
+  const [passcodeMessage, setPasscodeMessage] = useState({ text: '', isError: false });
+
+  const handleChangePasscodeSubmit = (e) => {
+    e.preventDefault();
+    if (currentCodeInput !== adminPasscode) {
+      setPasscodeMessage({ text: 'SECURITY EXCEPTION: CURRENT CODE INCORRECT', isError: true });
+      setTimeout(() => setPasscodeMessage({ text: '', isError: false }), 4000);
+      return;
+    }
+    if (newCodeInput !== confirmNewCode) {
+      setPasscodeMessage({ text: 'VALIDATION EXCEPTION: PASSCODES DO NOT MATCH', isError: true });
+      setTimeout(() => setPasscodeMessage({ text: '', isError: false }), 4000);
+      return;
+    }
+    if (newCodeInput.length < 4) {
+      setPasscodeMessage({ text: 'VALIDATION EXCEPTION: CODE MUST BE AT LEAST 4 CHARACTERS', isError: true });
+      setTimeout(() => setPasscodeMessage({ text: '', isError: false }), 4000);
+      return;
+    }
+    changeAdminPasscode(newCodeInput);
+    setPasscodeMessage({ text: 'SECURITY CODE RECONFIGURED SUCCESSFULLY', isError: false });
+    setCurrentCodeInput('');
+    setNewCodeInput('');
+    setConfirmNewCode('');
+    setTimeout(() => setPasscodeMessage({ text: '', isError: false }), 4000);
+  };
 
   // Tournament Form States
   const [showAddT, setShowAddT] = useState(false);
@@ -267,6 +299,13 @@ export default function AdminDashboard() {
           >
             <BarChart2 size={16} />
             <span>METRIC ANALYTICS</span>
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            <ShieldAlert size={16} />
+            <span>SYSTEM SETTINGS</span>
           </button>
         </div>
 
@@ -730,6 +769,60 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Tab 5: System Settings */}
+        {activeTab === 'settings' && (
+          <div className="tab-pane-content glass-panel">
+            <div className="pane-header-actions">
+              <div className="pane-title-group">
+                <h3>SYSTEM SECURITY CREDENTIALS</h3>
+                <p>Reconfigure admin passphrase access code</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleChangePasscodeSubmit} className="passcode-changer-form" style={{ maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="form-group">
+                <label className="label-futuristic">CURRENT PASSPHRASE</label>
+                <input 
+                  type="password" className="input-futuristic" required
+                  placeholder="Enter current passcode"
+                  value={currentCodeInput} 
+                  onChange={(e) => setCurrentCodeInput(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="label-futuristic">NEW PASSPHRASE</label>
+                <input 
+                  type="password" className="input-futuristic" required
+                  placeholder="Enter new passcode"
+                  value={newCodeInput} 
+                  onChange={(e) => setNewCodeInput(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="label-futuristic">CONFIRM NEW PASSPHRASE</label>
+                <input 
+                  type="password" className="input-futuristic" required
+                  placeholder="Confirm new passcode"
+                  value={confirmNewCode} 
+                  onChange={(e) => setConfirmNewCode(e.target.value)}
+                />
+              </div>
+
+              <button type="submit" className="btn-futuristic btn-primary w-full mt-2">
+                <span>COMMIT SECURITY RECONFIGURATION</span>
+              </button>
+
+              {passcodeMessage.text && (
+                <div className={`editor-success-msg text-center mt-3 ${passcodeMessage.isError ? 'text-glow-pink' : 'text-glow-cyan'}`} style={{ color: passcodeMessage.isError ? 'var(--accent)' : 'var(--secondary)' }}>
+                  {passcodeMessage.text}
+                </div>
+              )}
+            </form>
           </div>
         )}
 

@@ -131,7 +131,11 @@ export const AppProvider = ({ children }) => {
   const [selectedTournament, setSelectedTournament] = useState(null);
   const [activeRegistrationId, setActiveRegistrationId] = useState('');
   
-  // Admin Login State
+  // Admin Passcode & Login State
+  const [adminPasscode, setAdminPasscode] = useState(() => {
+    return localStorage.getItem('esports_admin_passcode') || 'admin1337';
+  });
+
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     return localStorage.getItem('esports_admin_logged_in') === 'true';
   });
@@ -167,7 +171,7 @@ export const AppProvider = ({ children }) => {
 
   // Admin Methods
   const loginAdmin = (passphrase) => {
-    if (passphrase === 'admin1337') {
+    if (passphrase === adminPasscode) {
       setIsAdminLoggedIn(true);
       localStorage.setItem('esports_admin_logged_in', 'true');
       return true;
@@ -178,6 +182,11 @@ export const AppProvider = ({ children }) => {
   const logoutAdmin = () => {
     setIsAdminLoggedIn(false);
     localStorage.removeItem('esports_admin_logged_in');
+  };
+
+  const changeAdminPasscode = (newCode) => {
+    setAdminPasscode(newCode);
+    localStorage.setItem('esports_admin_passcode', newCode);
   };
 
   // Tournament CRUD
@@ -280,7 +289,9 @@ export const AppProvider = ({ children }) => {
       updateRegistrationStatus,
       deleteRegistration,
       homepageContent,
-      updateHomepage
+      updateHomepage,
+      adminPasscode,
+      changeAdminPasscode
     }}>
       {children}
     </AppContext.Provider>
