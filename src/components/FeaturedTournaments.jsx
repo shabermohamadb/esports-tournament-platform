@@ -3,7 +3,7 @@ import { AppContext } from '../context/AppContext';
 import { Calendar, DollarSign, Users, Award, ShieldAlert, Clock } from 'lucide-react';
 
 export default function FeaturedTournaments() {
-  const { tournaments, navigateTo } = useContext(AppContext);
+  const { tournaments, navigateTo, getProgressivePrizePool } = useContext(AppContext);
   const [countdownText, setCountdownText] = useState({});
 
   // Countdown timer logic for tournaments
@@ -66,8 +66,10 @@ export default function FeaturedTournaments() {
         <div className="tournaments-grid">
           {tournaments.map((t) => {
             const slotsProgress = (t.slotsRegistered / t.slotsMax) * 100;
-            const banner = getGameBanner(t.game);
+            const banner = t.banner || getGameBanner(t.game);
             const countdown = countdownText[t.id] || 'Calculating...';
+            const currentPrizePool = getProgressivePrizePool(t);
+            const isProgressive = currentPrizePool > t.prizePool;
 
             return (
               <div key={t.id} className="glass-panel tournament-card">
@@ -81,6 +83,12 @@ export default function FeaturedTournaments() {
                   <span className={`tag-futuristic tag-cyan floating-mode`}>
                     {t.mode}
                   </span>
+                  
+                  {isProgressive && (
+                    <span className={`tag-futuristic tag-magenta`} style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 5, animation: 'pulse-glow 2s infinite' }}>
+                      PROGRESSIVE
+                    </span>
+                  )}
                   
                   <div className="floating-countdown-badge">
                     <Clock size={12} className="text-secondary" />
@@ -100,7 +108,10 @@ export default function FeaturedTournaments() {
                     </div>
                     <div className="meta-item">
                       <Award size={14} className="text-primary" />
-                      <span>Prize Pool: <strong className="text-glow-pink">₹{t.prizePool}</strong></span>
+                      <span>Prize Pool: <strong className="text-glow-pink">₹{currentPrizePool}</strong></span>
+                      {isProgressive && (
+                        <span className="text-glow-cyan" style={{ fontSize: '0.75rem', marginLeft: '0.35rem', fontWeight: 'bold' }}>(Base: ₹{t.prizePool})</span>
+                      )}
                     </div>
                     <div className="meta-item">
                       <DollarSign size={14} className="text-secondary" />

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { AppContext } from '../context/AppContext';
 import { Shield, HelpCircle, Trophy, Image as ImageIcon, Send, MessageSquare, ExternalLink, Calendar } from 'lucide-react';
 
 export default function PremiumSections() {
+  const { galleryImages } = useContext(AppContext);
   const [activeFaq, setActiveFaq] = useState(null);
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
@@ -62,12 +64,7 @@ export default function PremiumSections() {
     }
   ];
 
-  const galleryImages = [
-    'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=400&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=400&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=400&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=400&auto=format&fit=crop'
-  ];
+  // galleryImages loaded dynamically from context
 
   return (
     <div className="premium-sections-wrapper">

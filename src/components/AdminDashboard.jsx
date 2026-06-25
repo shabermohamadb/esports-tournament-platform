@@ -11,7 +11,8 @@ export default function AdminDashboard() {
     homepageContent, updateHomepage,
     tournaments, addTournament, deleteTournament, updateTournament,
     registrations, updateRegistrationStatus, deleteRegistration,
-    adminPasscode, changeAdminPasscode
+    adminPasscode, changeAdminPasscode,
+    galleryImages, setGalleryImages, getProgressivePrizePool
   } = useContext(AppContext);
 
   // Login Form
@@ -30,6 +31,9 @@ export default function AdminDashboard() {
   const [newCodeInput, setNewCodeInput] = useState('');
   const [confirmNewCode, setConfirmNewCode] = useState('');
   const [passcodeMessage, setPasscodeMessage] = useState({ text: '', isError: false });
+
+  // Image & Gallery Manager States
+  const [newGalleryUrl, setNewGalleryUrl] = useState('');
 
   const handleChangePasscodeSubmit = (e) => {
     e.preventDefault();
@@ -59,7 +63,7 @@ export default function AdminDashboard() {
   // Tournament Form States
   const [showAddT, setShowAddT] = useState(false);
   const [newT, setNewT] = useState({
-    name: '', game: 'Valorant', mode: '5v5 Team',
+    name: '', game: 'Valorant', banner: '', mode: '5v5 Team',
     entryFee: 0, prizePool: 0, date: '', time: '',
     slotsMax: 32, rules: ''
   });
@@ -98,16 +102,27 @@ export default function AdminDashboard() {
       rules: rulesArray
     });
     setNewT({
-      name: '', game: 'Valorant', mode: '5v5 Team',
+      name: '', game: 'Valorant', banner: '', mode: '5v5 Team',
       entryFee: 0, prizePool: 0, date: '', time: '',
       slotsMax: 32, rules: ''
     });
     setShowAddT(false);
   };
 
+  const handleAddGalleryImage = (e) => {
+    e.preventDefault();
+    if (!newGalleryUrl.trim()) return;
+    setGalleryImages(prev => [...prev, newGalleryUrl]);
+    setNewGalleryUrl('');
+  };
+
+  const handleDeleteGalleryImage = (index) => {
+    setGalleryImages(prev => prev.filter((_, idx) => idx !== index));
+  };
+
   // CSV Export utility
   const exportToCSV = () => {
-    const headers = ['ID', 'Tournament', 'Type', 'Team Name', 'Captain Name', 'Email', 'Discord', 'Members', 'Tx ID', 'Amount ($)', 'Status', 'Registered At'];
+    const headers = ['ID', 'Tournament', 'Type', 'Team Name', 'Captain Name', 'Email', 'Discord', 'Members', 'Tx ID', 'Amount (INR)', 'Status', 'Registered At'];
     const rows = registrations.map(r => [
       r.id,
       r.tournamentName,
@@ -509,12 +524,20 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="form-group">
-                  <label className="label-futuristic">MAX TEAMS SLOTS</label>
-                  <input 
-                    type="number" className="input-futuristic" required min="2"
-                    value={newT.slotsMax} onChange={(e) => setNewT({ ...newT, slotsMax: e.target.value })}
-                  />
-                </div>
+                      <label className="label-futuristic">MAX TEAMS SLOTS</label>
+                      <input 
+                        type="number" className="input-futuristic" required min="2"
+                        value={newT.slotsMax} onChange={(e) => setNewT({ ...newT, slotsMax: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="label-futuristic">TOURNAMENT BANNER IMAGE URL (LEAVE BLANK FOR DEFAULT)</label>
+                      <input 
+                        type="text" className="input-futuristic font-mono text-xs" placeholder="https://images.unsplash.com/photo-..."
+                        value={newT.banner} onChange={(e) => setNewT({ ...newT, banner: e.target.value })}
+                      />
+                    </div>
 
                 <div className="form-group">
                   <label className="label-futuristic">RULES (ONE RULE PER LINE)</label>
@@ -559,7 +582,10 @@ export default function AdminDashboard() {
                       </td>
                       <td>
                         <div>Fee: <strong>₹{t.entryFee}</strong></div>
-                        <div>Prize: <strong className="text-glow-pink">₹{t.prizePool}</strong></div>
+                        <div>Prize: <strong className="text-glow-pink">₹{getProgressivePrizePool(t)}</strong></div>
+                        {getProgressivePrizePool(t) > t.prizePool && (
+                          <div style={{ fontSize: '0.65rem', color: 'var(--secondary)', fontWeight: 'bold' }}>(Prog.)</div>
+                        )}
                       </td>
                       <td>
                         <div className="text-xs font-bold">{t.slotsRegistered} / {t.slotsMax} Slots</div>
@@ -704,6 +730,43 @@ export default function AdminDashboard() {
                 </div>
               )}
             </form>
+
+            {/* Gallery Images Manager Section */}
+            <div className="gallery-manager-section mt-10" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <h4 className="form-sub-title text-glow-purple mb-4">NEXUS GALLERY IMAGES MANAGER</h4>
+              
+              {/* Add image form */}
+              <form onSubmit={handleAddGalleryImage} className="add-gallery-img-form" style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem' }}>
+                <input 
+                  type="text" className="input-futuristic" required
+                  placeholder="Paste new gallery image URL here..."
+                  value={newGalleryUrl}
+                  onChange={(e) => setNewGalleryUrl(e.target.value)}
+                />
+                <button type="submit" className="btn-futuristic btn-secondary" style={{ whiteSpace: 'nowrap' }}>
+                  <Plus size={14} />
+                  <span>ADD TO GALLERY</span>
+                </button>
+              </form>
+
+              {/* Grid of gallery thumbs */}
+              <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1.25rem' }}>
+                {galleryImages.map((src, index) => (
+                  <div key={index} className="glass-panel gallery-thumb-card" style={{ position: 'relative', height: '100px', overflow: 'hidden', borderRadius: '6px' }}>
+                    <img src={src} alt={`Thumb ${index}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button 
+                      type="button"
+                      className="btn-action-icon btn-delete" 
+                      onClick={() => handleDeleteGalleryImage(index)}
+                      style={{ position: 'absolute', top: '0.25rem', right: '0.25rem', background: 'rgba(2,2,8,0.85)', padding: '0.25rem', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px' }}
+                      title="Delete Image"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

@@ -7,6 +7,7 @@ const DEFAULT_TOURNAMENTS = [
     id: 't-val-nexus',
     name: 'VALORANT NEXUS SHOWDOWN',
     game: 'Valorant',
+    banner: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=600&auto=format&fit=crop',
     mode: '5v5 Team',
     entryFee: 500,
     prizePool: 50000,
@@ -26,6 +27,7 @@ const DEFAULT_TOURNAMENTS = [
     id: 't-apex-cyber',
     name: 'APEX LEGENDS CYBER-CUP',
     game: 'Apex Legends',
+    banner: 'https://images.unsplash.com/photo-1553481187-be93c21490a9?q=80&w=600&auto=format&fit=crop',
     mode: 'Trio (3v3)',
     entryFee: 300,
     prizePool: 35000,
@@ -45,6 +47,7 @@ const DEFAULT_TOURNAMENTS = [
     id: 't-lol-rift',
     name: 'LEAGUE OF RIFTWARS',
     game: 'League of Legends',
+    banner: 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=600&auto=format&fit=crop',
     mode: '5v5 Team',
     entryFee: 450,
     prizePool: 45000,
@@ -60,6 +63,13 @@ const DEFAULT_TOURNAMENTS = [
     ],
     status: 'Open'
   }
+];
+
+const DEFAULT_GALLERY = [
+  'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=400&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=400&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=400&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=400&auto=format&fit=crop'
 ];
 
 const DEFAULT_REGISTRATIONS = [
@@ -156,6 +166,11 @@ export const AppProvider = ({ children }) => {
     return data ? JSON.parse(data) : DEFAULT_HOMEPAGE_CONTENT;
   });
 
+  const [galleryImages, setGalleryImages] = useState(() => {
+    const data = localStorage.getItem('esports_gallery_images_inr');
+    return data ? JSON.parse(data) : DEFAULT_GALLERY;
+  });
+
   // Save states to localStorage when they change
   useEffect(() => {
     localStorage.setItem('esports_tournaments_inr', JSON.stringify(tournaments));
@@ -168,6 +183,24 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('esports_homepage_content_inr', JSON.stringify(homepageContent));
   }, [homepageContent]);
+
+  useEffect(() => {
+    localStorage.setItem('esports_gallery_images_inr', JSON.stringify(galleryImages));
+  }, [galleryImages]);
+
+  // Progressive prize pool helper
+  const getProgressivePrizePool = (t) => {
+    if (!t) return 0;
+    const { prizePool, entryFee, slotsRegistered } = t;
+    const requiredSlots = Math.ceil(prizePool / entryFee);
+    if (slotsRegistered > requiredSlots) {
+      const extraSlots = slotsRegistered - requiredSlots;
+      const extraFeesCollected = extraSlots * entryFee;
+      // progressive pool: increase pool by only half the extra entry fees collected
+      return prizePool + Math.round(extraFeesCollected * 0.5);
+    }
+    return prizePool;
+  };
 
   // Admin Methods
   const loginAdmin = (passphrase) => {
@@ -291,7 +324,10 @@ export const AppProvider = ({ children }) => {
       homepageContent,
       updateHomepage,
       adminPasscode,
-      changeAdminPasscode
+      changeAdminPasscode,
+      galleryImages,
+      setGalleryImages,
+      getProgressivePrizePool
     }}>
       {children}
     </AppContext.Provider>
